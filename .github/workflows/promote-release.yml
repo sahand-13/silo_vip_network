@@ -32,7 +32,7 @@ jobs:
           [[ "$EXPECTED_COMMIT" =~ ^[0-9a-f]{40}$ ]]
           actual=$(gh api "repos/$GH_REPO/git/ref/tags/dev-latest" --jq '.object.sha')
           [[ "$actual" == "$EXPECTED_COMMIT" ]] || { echo 'dev-latest no longer points to the expected commit' >&2; exit 1; }
-          target=$(gh api "repos/$GH_REPO/releases/tags/$VERSION" --jq '.target_commitish')
+          target=$(gh api --paginate "repos/$GH_REPO/releases?per_page=100" --jq ".[] | select(.tag_name == \"$VERSION\" and .draft) | .target_commitish")
           [[ "$target" == "$EXPECTED_COMMIT" ]] || { echo 'Draft targets a different commit' >&2; exit 1; }
           mkdir assets
           gh release download dev-latest --dir assets
