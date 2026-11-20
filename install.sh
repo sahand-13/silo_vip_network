@@ -1727,14 +1727,23 @@ _install_xui_service_unit() {
 # 60 req/h-per-IP limit that trips shared CI/CGNAT addresses (the install then
 # fails with "Failed to fetch x-ui version"), and falls back to the API.
 resolve_latest_tag() {
-    local url tag
-    url=$(curl -sSLI -o /dev/null -w '%{url_effective}' --retry 5 --retry-delay 3 --connect-timeout 15 --max-time 60 "https://github.com/sahand-13/silo_vip_network/releases/latest" 2>/dev/null)
-    tag=${url##*/tag/}
-    if [[ "$tag" != "$url" && -n "$tag" && "$tag" != "latest" ]]; then
+    local repo="sahand-13/silo_vip_network"
+    local tag
+
+    tag=$(curl -fsSL \
+        --retry 3 \
+        --connect-timeout 15 \
+        --max-time 60 \
+        "https://api.github.com/repos/${repo}/releases/latest" |
+        sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' |
+        head -n 1)
+
+    if [[ -n "$tag" ]]; then
         echo "$tag"
         return 0
     fi
-    curl -Ls --retry 5 --retry-delay 3 --connect-timeout 15 --max-time 60 "https://api.github.com/repos/sahand-13/silo_vip_network/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/'
+
+    return 1
 }
 
 # Releases publish <asset>.sha256 next to each archive. A mismatch or a failed
