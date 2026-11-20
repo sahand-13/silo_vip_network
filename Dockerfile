@@ -30,8 +30,18 @@ COPY --from=frontend /src/internal/web/dist ./internal/web/dist
 ENV CGO_ENABLED=1
 ENV CGO_CFLAGS="-D_LARGEFILE64_SOURCE"
 ENV GONOPROXY=github.com/klauspost/compress
-RUN go build -ldflags "-w -s" -o build/x-ui main.go
+ARG XUI_LDFLAGS="-w -s"
+RUN go build -ldflags "$XUI_LDFLAGS" -o build/x-ui main.go
 RUN ./DockerInit.sh "$TARGETARCH" "$TARGETVARIANT"
+
+# Exportable native installation archive contents.
+FROM scratch AS native-release
+COPY --from=builder /app/build/ /x-ui/
+COPY --from=builder /app/x-ui.sh /x-ui/x-ui.sh
+COPY --from=builder /app/x-ui.service.debian /x-ui/x-ui.service.debian
+COPY --from=builder /app/x-ui.service.rhel /x-ui/x-ui.service.rhel
+COPY --from=builder /app/x-ui.service.arch /x-ui/x-ui.service.arch
+COPY --from=builder /app/x-ui.rc /x-ui/x-ui.rc
 
 # ========================================================
 # Stage: Final Image of 3x-ui
