@@ -1,3 +1,5 @@
+> **Silo VIP Network:** For server installation and updates, follow [this guide](docs/silo-server-install.fa.md). Upstream 3x-ui installation commands install different code.
+
 [English](/README.md) | [فارسی](/README.fa_IR.md) | [العربية](/README.ar_EG.md) | [中文](/README.zh_CN.md) | [Español](/README.es_ES.md) | [Русский](/README.ru_RU.md) | [Türkçe](/README.tr_TR.md)
 
 <p align="center">

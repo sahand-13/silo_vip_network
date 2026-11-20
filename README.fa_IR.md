@@ -1,3 +1,5 @@
+> **نصب Silo VIP Network:** برای نصب و به‌روزرسانی این نسخه از [راهنمای نصب سرور](docs/silo-server-install.fa.md) استفاده کنید. دستورهای نصب بالادستی نسخهٔ اصلی 3x-ui را نصب می‌کنند.
+
 [English](/README.md) | [فارسی](/README.fa_IR.md) | [العربية](/README.ar_EG.md) | [中文](/README.zh_CN.md) | [Español](/README.es_ES.md) | [Русский](/README.ru_RU.md) | [Türkçe](/README.tr_TR.md)
 
 <p align="center">
