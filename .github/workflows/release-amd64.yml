@@ -1,0 +1,116 @@
+
+name: Build and publish Linux AMD64
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build x-ui-linux-amd64
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Download source code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Install Go using the version in go.mod
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # 3. Install Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # 4. Install build dependencies
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential gcc git curl unzip
+
+      # 5. Build frontend
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      # 6. Compile Linux AMD64 binary
+      - name: Build Go application
+        env:
+          CGO_ENABLED: 1
+          CGO_CFLAGS: "-D_LARGEFILE64_SOURCE"
+          GONOPROXY: github.com/klauspost/compress
+        run: |
+          mkdir -p build
+          go build -ldflags "-w -s" -o build/x-ui main.go
+
+      # 7. Download required runtime binaries and data files
+      - name: Prepare runtime files
+        run: |
+          chmod +x DockerInit.sh
+          ./DockerInit.sh amd64 ""
+
+      # 8. Package exactly as the installer expects
+      - name: Create release archive
+        run: |
+          set -e
+
+          mkdir -p package/x-ui
+
+          # Main application and bin directory
+          cp -a build/. package/x-ui/
+
+          # Installation scripts and service definitions
+          cp x-ui.sh package/x-ui/
+          cp x-ui.service.debian package/x-ui/
+          cp x-ui.service.rhel package/x-ui/
+          cp x-ui.service.arch package/x-ui/
+          cp x-ui.rc package/x-ui/
+
+          # Executable permissions
+          chmod +x package/x-ui/x-ui
+          chmod +x package/x-ui/x-ui.sh
+          chmod +x package/x-ui/bin/xray-linux-amd64
+          chmod +x package/x-ui/bin/mtg-linux-amd64
+
+          # Create archive
+          tar -czf x-ui-linux-amd64.tar.gz -C package x-ui
+
+          # Generate SHA256 checksum
+          sha256sum x-ui-linux-amd64.tar.gz \
+            > x-ui-linux-amd64.tar.gz.sha256
+
+          # Verify archive and checksum
+          tar -tzf x-ui-linux-amd64.tar.gz
+          sha256sum -c x-ui-linux-amd64.tar.gz.sha256
+
+      # 9. Move the latest tag to this commit
+      - name: Update latest tag
+        run: |
+          git tag -f latest "$GITHUB_SHA"
+          git push origin refs/tags/latest --force
+
+      # 10. Upload archive and checksum to existing latest release
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release upload latest \
+            x-ui-linux-amd64.tar.gz \
+            x-ui-linux-amd64.tar.gz.sha256 \
+            --clobber
