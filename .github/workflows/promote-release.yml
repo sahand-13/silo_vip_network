@@ -1,0 +1,50 @@
+name: Promote verified development build
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Stable release tag
+        required: true
+        type: string
+      commit:
+        description: Exact commit built by dev-latest
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      VERSION: ${{ inputs.version }}
+      EXPECTED_COMMIT: ${{ inputs.commit }}
+    steps:
+      - name: Verify, upload and publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "$EXPECTED_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+          actual=$(gh api "repos/$GH_REPO/git/ref/tags/dev-latest" --jq '.object.sha')
+          [[ "$actual" == "$EXPECTED_COMMIT" ]] || { echo 'dev-latest no longer points to the expected commit' >&2; exit 1; }
+          target=$(gh api "repos/$GH_REPO/releases/tags/$VERSION" --jq '.target_commitish')
+          [[ "$target" == "$EXPECTED_COMMIT" ]] || { echo 'Draft targets a different commit' >&2; exit 1; }
+          mkdir assets
+          gh release download dev-latest --dir assets
+          cd assets
+          for arch in amd64 arm64 386 armv5 armv6 armv7 s390x; do
+            file="x-ui-linux-$arch.tar.gz"
+            test -s "$file" && test -s "$file.sha256"
+            sha256sum -c "$file.sha256"
+            tar -tzf "$file" > archive-list.txt
+            grep -Fxq 'x-ui/x-ui' archive-list.txt
+          done
+          test -s x-ui-windows-amd64.zip && test -s x-ui-windows-amd64.zip.sha256
+          sha256sum -c x-ui-windows-amd64.zip.sha256
+          gh release upload "$VERSION" ./*.tar.gz ./*.zip ./*.sha256 --clobber
+          gh release edit "$VERSION" --draft=false --prerelease=false --latest
