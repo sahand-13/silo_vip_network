@@ -1,6 +1,17 @@
 # نصب Silo VIP Network روی سرور لینوکس
 
-این روش کد همین مخزن را با Docker روی سرور می‌سازد. به دسترسی sudo، Git، Docker Engine و افزونهٔ Docker Compose نیاز دارید. مخزن خصوصی باشد، ابتدا دسترسی Git سرور را تنظیم کنید. ساخت اولیه به اتصال اینترنت برای دریافت imageها و ابزارهای Xray نیاز دارد.
+این روش کد همین مخزن را با Docker روی سرور می‌سازد. به دسترسی sudo، curl، Git، Docker Engine و افزونهٔ Docker Compose نیاز دارید. مخزن خصوصی باشد، ابتدا دسترسی Git سرور را تنظیم کنید. ساخت اولیه به اتصال اینترنت برای دریافت imageها و ابزارهای Xray نیاز دارد.
+
+پس از انتشار فایل نصب در شاخهٔ main، اسکریپت را دانلود و اجرا کنید:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sahand-13/silo_vip_network/main/install.sh -o install-silo.sh
+sudo bash install-silo.sh
+```
+
+نصب در مسیر `/opt/silo-vip-network` انجام می‌شود. اجرای دوبارهٔ اسکریپت یک مخزن تمیز را با تغییرات شاخهٔ main به‌روزرسانی می‌کند و volumeهای اطلاعات را نگه می‌دارد. اگر مسیر موجود مربوط به مخزن دیگری باشد یا تغییر محلی داشته باشد، نصب متوقف می‌شود.
+
+روش دیگر، دریافت دستی مخزن است:
 
 ```bash
 git clone https://github.com/sahand-13/silo_vip_network.git
@@ -11,7 +22,7 @@ sudo bash scripts/silo-server.sh install
 پس از نصب، دستور زیر لاگ پنل را نشان می‌دهد. در نصب جدید نام کاربری و رمز تصادفی یک بار در ابتدای لاگ نوشته می‌شوند؛ آنها را در جای امن نگه دارید و بعد از ورود تغییر دهید:
 
 ```bash
-sudo docker compose -f docker-compose.silo.yml -p silo-vip-network logs --tail=100 silo
+sudo docker logs --tail=100 silo-vip-network
 ```
 
 آدرس پیش‌فرض پنل `http://SERVER_IP:2053/` است. پورت ۲۰۵۳ و پورت اینباندها و سابسکریپشن‌هایی را که تعریف می‌کنید در فایروال سرور و فایروال ارائه‌دهنده باز کنید. برای دسترسی ایمن از HTTPS استفاده کنید. در صورت استفاده از TLS و دامنهٔ اختصاصی، آدرس و پورت مطابق تنظیمات پنل تغییر می‌کنند.
@@ -21,7 +32,7 @@ sudo docker compose -f docker-compose.silo.yml -p silo-vip-network logs --tail=1
 برای به‌روزرسانی، پس از انتشار تغییرات در شاخهٔ main مخزن، روی سرور اجرا کنید:
 
 ```bash
-cd silo_vip_network
+cd /opt/silo-vip-network
 git pull --ff-only origin main
 sudo bash scripts/silo-server.sh update
 ```
@@ -31,6 +42,9 @@ sudo bash scripts/silo-server.sh update
 برای وضعیت و لاگ:
 
 ```bash
+cd /opt/silo-vip-network
 sudo bash scripts/silo-server.sh status
 sudo bash scripts/silo-server.sh logs
 ```
+
+اگر مخزن را دستی در پوشهٔ دیگری دریافت کرده‌اید، به‌جای `/opt/silo-vip-network` وارد همان پوشه شوید.
