@@ -2566,12 +2566,12 @@ func cloneStringMap(source map[string]string) map[string]string {
 // externalProxy / synthetic JSON-Clash entry). A set remark template drives it
 // in both the body and display contexts (genTemplatedRemark renders the
 // name-only part on displays); with no template it falls back to the inbound
-// remark, extra and email joined by "-".
+// remark, extra and client name joined by "-".
 func (s *SubService) genRemark(inbound *model.Inbound, email string, extra string, transport string) string {
 	if s.remarkTemplate != "" {
 		return s.genTemplatedRemark(inbound, s.lookupClient(inbound, email), extra, transport)
 	}
-	return fallbackRemark(inbound.Remark, extra, email)
+	return fallbackRemark(inbound.Remark, extra, clientLinkName(s.lookupClient(inbound, email)))
 }
 
 func fallbackRemark(parts ...string) string {

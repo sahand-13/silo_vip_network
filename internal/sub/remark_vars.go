@@ -166,6 +166,9 @@ func expandSegment(seg string, ctx remarkContext) (string, bool) {
 	values := make([]string, len(tokens))
 	for i, tok := range tokens {
 		val := remarkVarValue(tok.name, ctx)
+		if tok.name == "EMAIL" || tok.name == "USERNAME" {
+			val = clientLinkName(ctx.client)
+		}
 		values[i] = val
 		if val != "" && (!unlimitedDropTokens[tok.name] || val != unlimitedMark) {
 			hasOtherValue = true
@@ -627,7 +630,7 @@ func (s *SubService) effectiveTemplate(client model.Client) string {
 	key := templateInfoKey(client)
 	if s.subInfoNodeEnable || s.usageShown[key] {
 		remove := firstLinkOnlyBodyTokens
-		if s.showIdentityOnAllLinks {
+		if s.showIdentityOnAllLinks || strings.TrimSpace(client.DisplayName) != "" {
 			remove = usageInfoTokens
 		}
 		return filterRemarkTemplate(translated, remove)
@@ -669,13 +672,20 @@ func (s *SubService) genTemplatedRemark(inbound *model.Inbound, client model.Cli
 	return ctx.configName()
 }
 
+func clientLinkName(client model.Client) string {
+	if name := strings.TrimSpace(client.DisplayName); name != "" {
+		return name
+	}
+	return client.Email
+}
+
 // genHostRemark builds one host endpoint's remark for a specific client. With a
 // remark template set it is template-driven (body shows the full template on the
 // first link and the name-only part thereafter; displays render the name-only
-// part). With no template it falls back to inbound, host and email joined by "-".
+// part). With no template it falls back to inbound, host and client name joined by "-".
 func (s *SubService) genHostRemark(inbound *model.Inbound, client model.Client, hostRemark string, transport string) string {
 	if s.remarkTemplate != "" {
 		return s.genTemplatedRemark(inbound, client, hostRemark, transport)
 	}
-	return fallbackRemark(inbound.Remark, hostRemark, client.Email)
+	return fallbackRemark(inbound.Remark, hostRemark, clientLinkName(client))
 }

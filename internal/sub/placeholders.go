@@ -48,6 +48,7 @@ func renderSubPlaceholders(value string, data subPlaceholderData) string {
 
 var subMetadataTokens = map[string]bool{
 	"EMAIL":       true,
+	"USERNAME":    true,
 	"ID":          true,
 	"SHORT_ID":    true,
 	"TELEGRAM_ID": true,
@@ -87,7 +88,7 @@ func (a *SUBController) metadataForSubRequest(getSubReq func() *SubService, subI
 	}
 	var context remarkContext
 	var hasContext bool
-	if subMetadataUsesPlaceholders(a.subTitle, a.subSupportUrl, profileURL, a.subAnnounce) {
+	if a.subTitle == "" || subMetadataUsesPlaceholders(a.subTitle, a.subSupportUrl, profileURL, a.subAnnounce) {
 		var err error
 		subReq := getSubReq()
 		context, hasContext, err = subReq.subscriptionTemplateContextBySubID(subID)
@@ -98,8 +99,17 @@ func (a *SUBController) metadataForSubRequest(getSubReq func() *SubService, subI
 	// Disabled modes ignore the retained custom URL and never fall back to the request URL.
 	profileURL = renderSubPlaceholders(profileURL, subPlaceholderData{SubID: subID, Context: context, HasCtx: hasContext, Escape: true})
 	data := subPlaceholderData{SubID: subID, Context: context, HasCtx: hasContext}
+	titleData := data
+	name := strings.TrimSpace(context.client.DisplayName)
+	if name != "" {
+		titleData.Context.client.Email = name
+	}
+	title := renderSubPlaceholders(a.subTitle, titleData)
+	if title == "" {
+		title = name
+	}
 	return renderedSubMetadata{
-		Title:      renderSubPlaceholders(a.subTitle, data),
+		Title:      title,
 		SupportURL: renderSubPlaceholders(a.subSupportUrl, subPlaceholderData{SubID: subID, Context: context, HasCtx: hasContext, Escape: true}),
 		ProfileURL: profileURL,
 		Announce:   renderSubPlaceholders(a.subAnnounce, data),
@@ -107,7 +117,7 @@ func (a *SUBController) metadataForSubRequest(getSubReq func() *SubService, subI
 }
 
 func (s *SubService) subscriptionTemplateContextBySubID(subID string) (remarkContext, bool, error) {
-	if subID == "" {
+	if subID == "" || database.GetDB() == nil {
 		return remarkContext{}, false, nil
 	}
 	var rec model.ClientRecord

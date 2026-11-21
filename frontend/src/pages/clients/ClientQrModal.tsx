@@ -243,6 +243,7 @@ function ClientQrModalContent({
   const [loading, setLoading] = useState(false);
 
   const subId = client?.subId;
+  const clientName = client?.displayName?.trim() || client?.email || '';
   const subEnabled = !!subSettings?.enable;
   const subLink = subId && subEnabled && subSettings?.subURI ? subSettings.subURI + subId : '';
   const subJsonLink =
@@ -432,7 +433,7 @@ function ClientQrModalContent({
           <SubscriptionQrPresentation
             variant={variant}
             standardLink={subLink}
-            remark={`${client?.email || ''} — ${t('subscription.title')}`}
+            remark={`${clientName} — ${t('subscription.title')}`}
             happLink={happLink}
             happLoading={happLoading}
             happError={happError}
@@ -448,7 +449,7 @@ function ClientQrModalContent({
       out.push({
         key: 'subJson',
         label: `${t('subscription.title')} (JSON)`,
-        children: <QrPanel value={subJsonLink} remark={`${client?.email || ''} — JSON`} />,
+        children: <QrPanel value={subJsonLink} remark={`${clientName} — JSON`} />,
       });
     }
     links.forEach((link, idx) => {
@@ -468,14 +469,14 @@ function ClientQrModalContent({
         children: (
           <QrPanel
             value={link}
-            remark={parts?.remark || `${client?.email || ''} #${idx + 1}`}
+            remark={parts?.remark || `${clientName} #${idx + 1}`}
             showQr={!isPostQuantumLink(link)}
           />
         ),
       });
     });
     wgConfigs.forEach(({ inbound, endpoint, text }) => {
-      const meta = formatTunnelConfigMeta(inbound, client?.email, wgConfigs.length, endpoint);
+      const meta = formatTunnelConfigMeta(inbound, clientName, wgConfigs.length, endpoint);
       const label = (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           <Tag color="cyan" style={{ margin: 0 }}>
@@ -491,7 +492,7 @@ function ClientQrModalContent({
       });
     });
     awgConfigs.forEach(({ inbound, endpoint, text }) => {
-      const meta = formatTunnelConfigMeta(inbound, client?.email, awgConfigs.length, endpoint);
+      const meta = formatTunnelConfigMeta(inbound, clientName, awgConfigs.length, endpoint);
       const label = (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           <Tag color="purple" style={{ margin: 0 }}>
@@ -507,7 +508,7 @@ function ClientQrModalContent({
       });
     });
     tuicConfigs.forEach(({ endpoint, text }) => {
-      const name = client?.email || 'tuic';
+      const name = clientName || 'tuic';
       const multi = tuicConfigs.length > 1 ? endpoint : '';
       out.push({
         key: `tuic-config-${endpoint}`,
@@ -540,7 +541,7 @@ function ClientQrModalContent({
     wgConfigs,
     awgConfigs,
     links,
-    client?.email,
+    clientName,
     selectVariant,
     regenerateHappLink,
     openHappSettings,
@@ -559,7 +560,7 @@ function ClientQrModalContent({
   return (
     <Modal
       open={open}
-      title={client ? `${t('qrCode')} — ${client.email}` : t('qrCode')}
+      title={client ? `${t('qrCode')} — ${clientName}` : t('qrCode')}
       footer={null}
       width={520}
       centered
