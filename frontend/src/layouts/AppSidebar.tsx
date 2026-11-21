@@ -13,7 +13,6 @@ import {
   CodeOutlined,
   DatabaseOutlined,
   DiscordOutlined,
-  GithubOutlined,
   LogoutOutlined,
   MailOutlined,
   MenuOutlined,
@@ -29,7 +28,6 @@ import {
 } from '@ant-design/icons';
 
 import { HttpUtil } from '@/utils';
-import { formatPanelVersion } from '@/lib/panel-version';
 import { pauseAnimationsUntilLeave, useTheme } from '@/hooks/useTheme';
 import { useAllSettings } from '@/api/queries/useAllSettings';
 import { useCommandPalette } from '@/components/command-palette/useCommandPalette';
@@ -40,31 +38,12 @@ import './AppSidebar.css';
 // The palette listens for Ctrl as well as Cmd, so the chip must not show a
 // Mac glyph to the Linux and Windows operators who are most of this panel's.
 const SHORTCUT_MODIFIER = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent) ? '⌘' : 'Ctrl';
-const REPO_URL = 'https://github.com/MHSanaei/3x-ui';
 const LOGOUT_KEY = '__logout__';
 const RAIL_WIDTH = 72;
 const SIDER_WIDTH = 220;
 const SIDEBAR_PINNED_KEY = 'sidebar-pinned';
 
 let hoveredAcrossRemounts = false;
-
-function VersionBadge({ version, collapsed }: { version: string; collapsed?: boolean }) {
-  if (!version) return null;
-  const label = formatPanelVersion(version);
-  return (
-    <a
-      href={REPO_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="sider-version"
-      aria-label={`GitHub ${label}`}
-      title={label}
-    >
-      <GithubOutlined aria-hidden />
-      {!collapsed && <span className="sider-version-text">{label}</span>}
-    </a>
-  );
-}
 
 function ThemeCycleButton({
   id,
@@ -156,7 +135,6 @@ export default function AppSidebar() {
   }, [updateHovered]);
 
   const currentTheme: 'light' | 'dark' = isDark ? 'dark' : 'light';
-  const panelVersion = window.X_UI_CUR_VER || '';
 
   const tabs = useMemo<{ key: string; icon: ComponentType; title: string }[]>(
     () => [
@@ -403,9 +381,6 @@ export default function AppSidebar() {
           items={toMenuItems(utilItems)}
           onClick={onMenuClick}
         />
-        <div className="sider-footer">
-          <VersionBadge version={panelVersion} collapsed={railCollapsed} />
-        </div>
       </Layout.Sider>
 
       <Drawer
@@ -486,9 +461,6 @@ export default function AppSidebar() {
             setDrawerOpen(false);
           }}
         />
-        <div className="drawer-footer">
-          <VersionBadge version={panelVersion} />
-        </div>
       </Drawer>
 
       {!drawerOpen && (

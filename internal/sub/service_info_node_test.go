@@ -50,12 +50,13 @@ func TestSubService_InfoNode_Active(t *testing.T) {
 		t.Fatal(err)
 	}
 	rec := &model.ClientRecord{
-		Id:      1,
-		Email:   "user1@test.com",
-		SubID:   "sub-active",
-		UUID:    "c1-uuid",
-		Enable:  true,
-		TotalGB: 10737418240, // 10 GB
+		Id:          1,
+		Email:       "user1@test.com",
+		SubID:       "sub-active",
+		UUID:        "c1-uuid",
+		Enable:      true,
+		TotalGB:     10737418240, // 10 GB
+		DisplayName: "Test User",
 	}
 	if err := db.Create(rec).Error; err != nil {
 		t.Fatal(err)
@@ -97,8 +98,8 @@ func TestSubService_InfoNode_Active(t *testing.T) {
 		t.Fatalf("first link must be dummy socks node, got: %q", links[0])
 	}
 	decodedRemark, _ := url.QueryUnescape(strings.TrimPrefix(links[0], "socks://127.0.0.1:1080#"))
-	if !strings.Contains(decodedRemark, "user1@test.com") || !strings.Contains(decodedRemark, "8.00GB") {
-		t.Fatalf("expected dummy remark to contain user1@test.com and 8.00GB, got: %q", decodedRemark)
+	if !strings.Contains(decodedRemark, "Test User") || strings.Contains(decodedRemark, "user1@test.com") || !strings.Contains(decodedRemark, "8.00GB") {
+		t.Fatalf("expected dummy remark to contain Test User and 8.00GB without the internal email, got: %q", decodedRemark)
 	}
 
 	// Second link must be the clean vless link without traffic left tokens

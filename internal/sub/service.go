@@ -434,14 +434,17 @@ func (s *SubService) resolveInfoNodeRemark(subId string, uniqueEmails []string, 
 	isExpired := traffic.ExpiryTime > 0 && traffic.ExpiryTime/1000 <= nowSec
 	isDepleted := traffic.Total > 0 && (traffic.Up+traffic.Down) >= traffic.Total
 
-	primaryEmail := ""
+	client := model.Client{SubID: subId}
 	if len(uniqueEmails) > 0 {
-		primaryEmail = uniqueEmails[0]
+		client.Email = uniqueEmails[0]
+		if db := database.GetDB(); db != nil {
+			var record model.ClientRecord
+			if err := db.Select("display_name").Where("email = ? AND sub_id = ?", client.Email, subId).Take(&record).Error; err == nil {
+				client.DisplayName = record.DisplayName
+			}
+		}
 	}
-	ctx := remarkContext{
-		client: model.Client{Email: primaryEmail, SubID: subId},
-		stats:  traffic,
-	}
+	ctx := remarkContext{client: client, stats: traffic}
 
 	if isExpired {
 		tmpl := s.subExpiredTemplate
