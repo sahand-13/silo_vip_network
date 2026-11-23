@@ -100,6 +100,8 @@ type AllSetting struct {
 	SubMigrationNewURL          string `json:"subMigrationNewUrl" form:"subMigrationNewUrl"`
 	SubMigrationPort            int    `json:"subMigrationPort" form:"subMigrationPort"`
 	SubMigrationPath            string `json:"subMigrationPath" form:"subMigrationPath"`
+	SubMigrationCertFile        string `json:"subMigrationCertFile" form:"subMigrationCertFile"`
+	SubMigrationKeyFile         string `json:"subMigrationKeyFile" form:"subMigrationKeyFile"`
 	SubSupportUrl               string `json:"subSupportUrl" form:"subSupportUrl"`
 	SubProfileMode              string `json:"subProfileMode" form:"subProfileMode"`
 	SubProfileUrl               string `json:"subProfileUrl" form:"subProfileUrl"`

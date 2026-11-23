@@ -61,6 +61,8 @@ export const AllSettingSchema = z
     subMigrationNewUrl: z.string().optional(),
     subMigrationPort: z.number().int().min(0).max(65535).optional(),
     subMigrationPath: z.string().optional(),
+    subMigrationCertFile: z.string().optional(),
+    subMigrationKeyFile: z.string().optional(),
     subSupportUrl: z.string().optional(),
     subProfileMode: SubProfileModeSchema.optional(),
     subProfileUrl: z.string().optional(),

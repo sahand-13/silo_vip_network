@@ -59,6 +59,28 @@ export default function SubscriptionGeneralTab({
                   onChange={(value) => updateSetting({ subMigrationPort: value ?? 0 })}
                 />
               </SettingListItem>
+              <SettingListItem
+                paddings="small"
+                title={t('pages.settings.subMigrationTLS', { defaultValue: 'TLS certificate and key files' })}
+                description={t('pages.settings.subMigrationTLSDesc', {
+                  defaultValue: 'Set both server file paths for direct HTTPS. Leave them blank when a reverse proxy terminates TLS.',
+                })}
+              >
+                <Input
+                  dir="ltr"
+                  aria-label="TLS certificate file"
+                  placeholder="fullchain.pem"
+                  value={allSetting.subMigrationCertFile}
+                  onChange={(event) => updateSetting({ subMigrationCertFile: event.target.value })}
+                />
+                <Input
+                  dir="ltr"
+                  aria-label="TLS key file"
+                  placeholder="privkey.pem"
+                  value={allSetting.subMigrationKeyFile}
+                  onChange={(event) => updateSetting({ subMigrationKeyFile: event.target.value })}
+                />
+              </SettingListItem>
               <SettingListItem paddings="small" title={t('pages.settings.subMigrationPath')}>
                 <Input
                   dir="ltr"

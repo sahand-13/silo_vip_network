@@ -1,7 +1,9 @@
 package sub
 
 import (
+	"crypto/tls"
 	_ "embed"
+	"errors"
 	"html/template"
 	"net"
 	"net/http"
@@ -9,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/network"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/service"
 )
@@ -27,6 +30,18 @@ func StartMigrationServer() (*http.Server, error) {
 	port, path, err := settings.GetSubMigrationEndpoint()
 	if err != nil || port == 0 {
 		return nil, err
+	}
+	certFile, keyFile, err := settings.GetSubMigrationTLS()
+	if err != nil {
+		return nil, err
+	}
+	certificates := []tls.Certificate(nil)
+	if certFile != "" || keyFile != "" {
+		certificate, err := tls.LoadX509KeyPair(certFile, keyFile)
+		if err != nil {
+			return nil, err
+		}
+		certificates = append(certificates, certificate)
 	}
 	listener, err := net.Listen("tcp", net.JoinHostPort("", strconv.Itoa(port)))
 	if err != nil {
@@ -53,6 +68,15 @@ func StartMigrationServer() (*http.Server, error) {
 			_ = migrationPage.Execute(writer, struct{ OldURL, NewURL string }{oldURL, newURL})
 		}),
 	}
-	go network.ServeHTTP(server, listener, "Subscription migration server")
+	if len(certificates) != 0 {
+		server.TLSConfig = &tls.Config{Certificates: certificates, MinVersion: tls.VersionTLS12}
+		go func() {
+			if err := server.ServeTLS(listener, "", ""); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				logger.Error("Subscription migration server stopped unexpectedly:", err)
+			}
+		}()
+	} else {
+		go network.ServeHTTP(server, listener, "Subscription migration server")
+	}
 	return server, nil
 }

@@ -114,6 +114,8 @@ var defaultValueMap = map[string]string{
 	"subMigrationNewUrl":          "",
 	"subMigrationPort":            "2097",
 	"subMigrationPath":            "/subscription-migration",
+	"subMigrationCertFile":        "",
+	"subMigrationKeyFile":         "",
 	"subSupportUrl":               "",
 	"subProfileMode":              SubProfileModeNone,
 	"subProfileUrl":               "",
@@ -913,6 +915,15 @@ func (s *SettingService) GetSubMigrationEndpoint() (int, string, error) {
 	}
 	path, err := s.getString("subMigrationPath")
 	return port, path, err
+}
+
+func (s *SettingService) GetSubMigrationTLS() (string, string, error) {
+	certFile, err := s.getString("subMigrationCertFile")
+	if err != nil {
+		return "", "", err
+	}
+	keyFile, err := s.getString("subMigrationKeyFile")
+	return certFile, keyFile, err
 }
 
 func (s *SettingService) GetSubSupportUrl() (string, error) {
@@ -1842,6 +1853,11 @@ func (s *SettingService) preserveRedactedSecrets(allSetting *entity.AllSetting, 
 var subMigrationPathPattern = regexp.MustCompile(`^/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]*$`)
 
 func validateSettingsURLs(allSetting *entity.AllSetting) error {
+	allSetting.SubMigrationCertFile = strings.TrimSpace(allSetting.SubMigrationCertFile)
+	allSetting.SubMigrationKeyFile = strings.TrimSpace(allSetting.SubMigrationKeyFile)
+	if (allSetting.SubMigrationCertFile == "") != (allSetting.SubMigrationKeyFile == "") {
+		return common.NewError("subscription migration TLS requires both certificate and key files")
+	}
 	allSetting.SubMigrationPath = strings.TrimSpace(allSetting.SubMigrationPath)
 	if allSetting.SubMigrationPath == "" {
 		allSetting.SubMigrationPath = "/subscription-migration"

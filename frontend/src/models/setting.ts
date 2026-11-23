@@ -52,6 +52,8 @@ export class AllSetting {
   subMigrationNewUrl = '';
   subMigrationPort = 2097;
   subMigrationPath = '/subscription-migration';
+  subMigrationCertFile = '';
+  subMigrationKeyFile = '';
   subSupportUrl = '';
   subProfileMode: SubProfileMode = 'none';
   subProfileUrl = '';
