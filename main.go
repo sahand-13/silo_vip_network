@@ -138,6 +138,10 @@ func runWebServer() {
 	if err != nil {
 		log.Fatalf("Error starting sub server: %v", err)
 	}
+	migrationServer, migrationErr := sub.StartMigrationServer()
+	if migrationErr != nil {
+		logger.Error("Error starting subscription migration:", migrationErr)
+	}
 
 	sigCh := make(chan os.Signal, 8)
 	// Trap shutdown signals
@@ -184,6 +188,9 @@ func runWebServer() {
 			if err != nil {
 				logger.Debug("Error stopping sub server:", err)
 			}
+			if migrationServer != nil {
+				_ = migrationServer.Close()
+			}
 
 			server = web.NewServer(sub.NewLinkProvider())
 			global.SetWebServer(server)
@@ -201,6 +208,10 @@ func runWebServer() {
 				log.Fatalf("Error restarting sub server: %v", err)
 			}
 			log.Println("Sub server restarted successfully.")
+			migrationServer, migrationErr = sub.StartMigrationServer()
+			if migrationErr != nil {
+				logger.Error("Error starting subscription migration:", migrationErr)
+			}
 		case sys.SIGUSR1:
 			logger.Info("Received USR1 signal, restarting xray-core...")
 			err := server.RestartXray()
@@ -221,6 +232,9 @@ func runWebServer() {
 				logger.Error("Server shutdown failed:", err)
 			}
 			_ = subServer.Stop()
+			if migrationServer != nil {
+				_ = migrationServer.Close()
+			}
 			log.Println("Shutting down servers.")
 			return
 		}

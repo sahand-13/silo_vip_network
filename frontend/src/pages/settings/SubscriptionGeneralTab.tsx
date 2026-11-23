@@ -47,12 +47,51 @@ export default function SubscriptionGeneralTab({
       defaultActiveKey={initialTab}
       items={[
         {
-          key: '1',
-          label: catTabLabel(
-            <SettingOutlined aria-hidden />,
-            t('pages.settings.panelSettings'),
-            isMobile,
+          key: 'migration',
+          label: catTabLabel(<BranchesOutlined aria-hidden />, t('pages.settings.subMigrationTab'), isMobile),
+          children: (
+            <>
+              <SettingListItem paddings="small" title={t('pages.settings.subMigrationPort')}>
+                <InputNumber
+                  min={0}
+                  max={65535}
+                  value={allSetting.subMigrationPort}
+                  onChange={(value) => updateSetting({ subMigrationPort: value ?? 0 })}
+                />
+              </SettingListItem>
+              <SettingListItem paddings="small" title={t('pages.settings.subMigrationPath')}>
+                <Input
+                  dir="ltr"
+                  value={allSetting.subMigrationPath}
+                  onChange={(event) => updateSetting({ subMigrationPath: event.target.value })}
+                />
+              </SettingListItem>
+              <SettingListItem
+                paddings="small"
+                title={t('pages.settings.subMigrationOld')}
+                description={t('pages.settings.subMigrationDesc')}
+              >
+                <Input
+                  dir="ltr"
+                  placeholder="https://old.example.com:8443/sub/"
+                  value={allSetting.subMigrationOldUrl}
+                  onChange={(e) => updateSetting({ subMigrationOldUrl: e.target.value })}
+                />
+              </SettingListItem>
+              <SettingListItem paddings="small" title={t('pages.settings.subMigrationNew')}>
+                <Input
+                  dir="ltr"
+                  placeholder="https://new.example.com:2096/sub/"
+                  value={allSetting.subMigrationNewUrl}
+                  onChange={(e) => updateSetting({ subMigrationNewUrl: e.target.value })}
+                />
+              </SettingListItem>
+            </>
           ),
+        },
+        {
+          key: '1',
+          label: catTabLabel(<SettingOutlined aria-hidden />, t('pages.settings.panelSettings'), isMobile),
           children: (
             <>
               <SettingListItem

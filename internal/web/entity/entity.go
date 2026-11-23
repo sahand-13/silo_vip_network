@@ -96,6 +96,10 @@ type AllSetting struct {
 	SubClashAutoDetect          bool   `json:"subClashAutoDetect" form:"subClashAutoDetect"`
 	SubClashUserAgentRegex      string `json:"subClashUserAgentRegex" form:"subClashUserAgentRegex"`
 	SubTitle                    string `json:"subTitle" form:"subTitle"`
+	SubMigrationOldURL          string `json:"subMigrationOldUrl" form:"subMigrationOldUrl"`
+	SubMigrationNewURL          string `json:"subMigrationNewUrl" form:"subMigrationNewUrl"`
+	SubMigrationPort            int    `json:"subMigrationPort" form:"subMigrationPort"`
+	SubMigrationPath            string `json:"subMigrationPath" form:"subMigrationPath"`
 	SubSupportUrl               string `json:"subSupportUrl" form:"subSupportUrl"`
 	SubProfileMode              string `json:"subProfileMode" form:"subProfileMode"`
 	SubProfileUrl               string `json:"subProfileUrl" form:"subProfileUrl"`

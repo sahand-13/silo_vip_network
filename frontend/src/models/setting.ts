@@ -48,6 +48,10 @@ export class AllSetting {
   subClashAutoDetect = false;
   subClashUserAgentRegex = '';
   subTitle = '';
+  subMigrationOldUrl = '';
+  subMigrationNewUrl = '';
+  subMigrationPort = 2097;
+  subMigrationPath = '/subscription-migration';
   subSupportUrl = '';
   subProfileMode: SubProfileMode = 'none';
   subProfileUrl = '';

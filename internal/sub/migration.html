@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>انتقال لینک اشتراک</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+    body { min-height: 100vh; margin: 0; display: grid; place-items: center; background: Canvas; color: CanvasText; }
+    main { width: min(36rem, calc(100% - 2rem)); box-sizing: border-box; padding: clamp(1rem, 5vw, 2.25rem); border: 1px solid GrayText; border-radius: 1rem; }
+    h1 { margin-block-start: 0; font-size: 1.6rem; }
+    p { line-height: 1.8; }
+    label { display: block; margin-block: 1rem .5rem; }
+    input, button { font: inherit; padding: .65rem .8rem; border-radius: .55rem; }
+    input { width: 100%; box-sizing: border-box; border: 1px solid GrayText; }
+    button { margin-block-start: .85rem; border: 0; background: #155eef; color: #fff; cursor: pointer; }
+    #status { min-height: 1.8em; }
+  </style>
+</head>
+<body>
+  <main id="migration" data-old="{{.OldURL}}" data-new="{{.NewURL}}">
+    <h1>انتقال لینک اشتراک</h1>
+    <p>لینک قبلی را وارد کنید و لینک جدید را به برنامهٔ خود اضافه کنید.</p>
+    <form id="convert" autocomplete="off">
+      <label for="old-link">لینک قبلی</label>
+      <input id="old-link" dir="ltr" type="url" required spellcheck="false" autocapitalize="off" placeholder="https://...">
+      <button type="submit">ساخت لینک جدید</button>
+    </form>
+    <div id="result" hidden>
+      <label for="new-link">لینک جدید</label>
+      <input id="new-link" dir="ltr" readonly>
+      <button type="button" id="copy">کپی لینک</button>
+    </div>
+    <p id="status" role="status"></p>
+  </main>
+  <script>
+    function convertSubscription(raw, oldBase, newBase) {
+      const source = new URL(raw.trim());
+      const oldURL = new URL(oldBase);
+      const target = new URL(newBase);
+      const prefix = oldURL.pathname.replace(/\/+$/, '') + '/';
+      if (source.origin !== oldURL.origin || source.username || source.password || !source.pathname.startsWith(prefix)) {
+        throw new Error('old base mismatch');
+      }
+      const id = source.pathname.slice(prefix.length).replace(/\/$/, '');
+      const decoded = decodeURIComponent(id);
+      if (!decoded || decoded === '.' || decoded === '..' || /[/\\\s]/u.test(decoded)) {
+        throw new Error('invalid subscription ID');
+      }
+      target.pathname = target.pathname.replace(/\/+$/, '') + '/' + id;
+      target.search = source.search;
+      return target.href;
+    }
+
+    const byId = (id) => document.getElementById(id);
+    const { old: oldBase, new: newBase } = byId('migration').dataset;
+    const input = byId('old-link');
+    const output = byId('new-link');
+    const result = byId('result');
+    const status = byId('status');
+    input.addEventListener('input', () => {
+      output.value = '';
+      result.hidden = true;
+      status.textContent = '';
+    });
+    byId('convert').addEventListener('submit', (event) => {
+      event.preventDefault();
+      try {
+        output.value = convertSubscription(input.value, oldBase, newBase);
+        result.hidden = false;
+        status.textContent = '';
+      } catch {
+        output.value = '';
+        result.hidden = true;
+        status.textContent = 'لینک معتبر نیست یا با آدرس قبلی اشتراک مطابقت ندارد.';
+      }
+    });
+    byId('copy').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(output.value);
+        status.textContent = 'لینک کپی شد.';
+      } catch {
+        output.select();
+        status.textContent = 'لینک انتخاب شد؛ آن را کپی کنید.';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"reflect"
 	"regexp"
@@ -109,6 +110,10 @@ var defaultValueMap = map[string]string{
 	"subClashAutoDetect":          "false",
 	"subClashUserAgentRegex":      "",
 	"subTitle":                    "",
+	"subMigrationOldUrl":          "",
+	"subMigrationNewUrl":          "",
+	"subMigrationPort":            "2097",
+	"subMigrationPath":            "/subscription-migration",
 	"subSupportUrl":               "",
 	"subProfileMode":              SubProfileModeNone,
 	"subProfileUrl":               "",
@@ -890,6 +895,24 @@ func (s *SettingService) GetSubClashUserAgentRegex() (string, error) {
 
 func (s *SettingService) GetSubTitle() (string, error) {
 	return s.getString("subTitle")
+}
+
+func (s *SettingService) GetSubMigrationURLs() (string, string, error) {
+	oldURL, err := s.getString("subMigrationOldUrl")
+	if err != nil {
+		return "", "", err
+	}
+	newURL, err := s.getString("subMigrationNewUrl")
+	return oldURL, newURL, err
+}
+
+func (s *SettingService) GetSubMigrationEndpoint() (int, string, error) {
+	port, err := s.getInt("subMigrationPort")
+	if err != nil {
+		return 0, "", err
+	}
+	path, err := s.getString("subMigrationPath")
+	return port, path, err
 }
 
 func (s *SettingService) GetSubSupportUrl() (string, error) {
@@ -1816,7 +1839,31 @@ func (s *SettingService) preserveRedactedSecrets(allSetting *entity.AllSetting, 
 	return nil
 }
 
+var subMigrationPathPattern = regexp.MustCompile(`^/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]*$`)
+
 func validateSettingsURLs(allSetting *entity.AllSetting) error {
+	allSetting.SubMigrationPath = strings.TrimSpace(allSetting.SubMigrationPath)
+	if allSetting.SubMigrationPath == "" {
+		allSetting.SubMigrationPath = "/subscription-migration"
+	}
+	if !subMigrationPathPattern.MatchString(allSetting.SubMigrationPath) {
+		return common.NewError("invalid subscription migration path")
+	}
+	port := allSetting.SubMigrationPort
+	if port < 0 || port > 65535 || (port != 0 && (port == allSetting.WebPort || port == allSetting.SubPort)) {
+		return common.NewError("subscription migration requires a separate port (or 0 to disable)")
+	}
+	for _, field := range []*string{&allSetting.SubMigrationOldURL, &allSetting.SubMigrationNewURL} {
+		*field = strings.TrimSpace(*field)
+		if *field == "" {
+			continue
+		}
+		base, err := url.Parse(*field)
+		if err != nil || base.Hostname() == "" || (base.Scheme != "https" && base.Scheme != "http") ||
+			base.User != nil || base.ForceQuery || base.RawQuery != "" || strings.ContainsAny(*field, "#\\") {
+			return common.NewError("subscription migration bases must be HTTP(S) URLs without credentials, query, or fragment")
+		}
+	}
 	if allSetting.ExternalTrafficInformURI != "" {
 		u, err := SanitizeHTTPURL(allSetting.ExternalTrafficInformURI)
 		if err != nil {
